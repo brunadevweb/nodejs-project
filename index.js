@@ -1,6 +1,11 @@
-const express = require("express")
+const api = require('./api')
+
+const express = require('express')
 
 const server = express();
+
+const LocalStorage = require('node-localstorage').LocalStorage;
+const localStorage = new LocalStorage('./localstorage')
 
 server.use(express.json());
 
@@ -50,3 +55,46 @@ server.delete('/product/:id', (req, res) => {
 
     res.send({ product: products})
 })
+
+server.get('/pokemon', async (req, res) => {
+
+    try{
+        const {data} = await api.get('pokemon/1')
+        return res.send({name: data.name})
+
+    } catch (error) {
+        res.send({error: error.message})
+    }
+})
+
+function verifyUserAlread(req, res, next) {
+    const {email} = req.body
+
+    if (!allUsers.find(user => user.email === email)) {
+        return next();
+    }
+
+    return res.status(400).json({Failed: 'This is email alread registered'})
+
+}
+
+const allUsers = [];
+
+server.post('/register-users', verifyUserAlread, (req, res) => {
+    const user = req.body;
+
+    allUsers.push(user)
+
+    localStorage.setItem('users', JSON.stringify(allUsers))
+
+    return res.json({user})
+})
+
+server.get('/users', (req, res) => {
+
+    const users = JSON.parse(localStorage.getItem('user'))
+
+    return res.json(users)
+})
+    
+
